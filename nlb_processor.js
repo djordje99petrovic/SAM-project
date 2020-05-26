@@ -1,84 +1,75 @@
+'use strict';
+
 const AWS = require("aws-sdk");
-const sqs = new AWS.SQS({
-    region: "eu-central-1",
-});
+const sqs = new AWS.SQS({apiVersion: '2012-11-05'});
 
 exports.handler = (event, context, callback) => {
 
     const accountId = context.invokedFunctionArn.split(':')[4];
+    const region = context.invokedFunctionArn.split(':')[3];
 
-    const data = event.Records[0].body;
-    const message = data.split('\n');
+    var data = event.Records[0].body;
+    var poruka = data.split('\n');
     
-    const katrica = message[0].split(':');
-    const banka = message[1].split(':');
-    const iznos = message[2].split(' ');
-    const vrijeme = message[3].split(' ');
-    const stat = message[4].split(':');
-    const opis = message[5].split(':');
-    const raspolozivo = message[6].split(' ');
+    var kartica = poruka[0].split(':');
+    var banka = poruka[1].split(':');
+    var iznos = poruka[2].split(' ');
+    var vrijeme = poruka[3].split(' ');
+    var stat = poruka[4].split(':');
+    var opis = poruka[5].split(':');
+    var raspolozivo = poruka[6].split(' ');
+    
+    var card = kartica[1];
+    var bank = banka[1];
+    var amount = iznos[1];
+    var currency = iznos[2];
+    var time = vrijeme[1] + " " + vrijeme[2];
+    var status = stat[1];
+    var description = opis[1];
+    var balance = raspolozivo[1];
 
-    const card = kartica[2];
-    const bank = banka[1];
-    const amount = iznos[1];
-    const time = vrijeme[1] + " " + vrijeme[2];
-    const status  = stat[1];
-    const description = opis[1];
-    const balance = raspolozivo[1];
-    const currency = iznos[2];
-
-    const params = {
+    var params = {
+        MessageBody: event.Records[0].body,
+        QueueUrl: "https://sqs." + region + ".amazonaws.com/" + accountId + "/parsed_messages",
         MessageAttributes: {
             "Card": {
                 DataType: "String",
-                Value: card
-            },
+                StringValue: card.trim()
+                    },
             "Bank": {
                 DataType: "String",
-                Value: bank
-            },
+                StringValue: bank.trim()
+                    },
             "Amount": {
                 DataType: "String",
-                Value: amount
-            },
+                StringValue: amount.trim()
+                    },
             "Currency": {
                 DataType: "String",
-                Value: currency
-            },
+                StringValue: currency.trim()
+                    },
             "Time": {
                 DataType: "String",
-                Value: time
-            },
+                StringValue: time.trim()
+                    },
             "Status": {
                 DataType: "String",
-                Value: status
-            },
+                StringValue: status.trim()
+                    },
             "Description": {
                 DataType: "String",
-                Value: description
-            },
+                StringValue: description.trim()
+                    },
             "Balance": {
                 DataType: "String",
-                Value: balance
-            }
+                StringValue: balance.trim()
+                    }        
         },
-        MessageBody: event.Records[0].body,
-        QueueUrl: 'https://sqs.'+ eu-central-1 +'.amazonaws.com/' + accountId + '/parsed_messages'
     };
 
-    sqs.sendMessage(params, function (err, data) {
-        if (err) {
-            console.log("Error", err);
-        } else {
-            console.log("Success", data.MessageId);
-        }
+    sqs.sendMessage(params, function(err, data) {
+        if (err) console.log(err, err.stack); // an error occurred
+        else     console.log(data);           // successful response
     });
-    const response = {
-        statusCode: responseCode,
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(responseBody),
-    };
-    callback(null, response);
+    
 };
