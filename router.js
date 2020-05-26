@@ -1,64 +1,51 @@
 const AWS = require("aws-sdk");
-const sqs = new AWS.SQS({
-    region: "eu-central-1",
-});
+const sqs = new AWS.SQS({apiVersion: '2012-11-05'});
+
 exports.handler = (event, context, callback) => {
-    console.info(event);
-    const accountId = context.invokedFunctionArn.split(":")[4];
-    const queueUrl1 = `https://sqs.eu-central-1.amazonaws.com/${accountId}/hb_message_processing_queue`;
-    const queueUrl2 = `https://sqs.eu-central-1.amazonaws.com/${accountId}/nlb_message_processing_queue`;
-
-    const responseBody = {
-        message: ""
-    };
-    let responseCode = 200;
-    const data = JSON.parse(event.body);
-    const nlb = data.message.includes("NLB");
-    const hipotekarna = data.message.includes("Hipotekarna");
     
-    if (hipotekarna==true){
-        const params = {
-            MessageBody: event.body,
-            QueueUrl: queueUrl1,
-        };
+    const accountId = context.invokedFunctionArn.split(':')[4];
+    const region = context.invokedFunctionArn.split(':')[3];
 
-        sqs.sendMessage(params, (error, data) => {
-            if (error) {
-                console.info("error:", `failed to send message${error}`);
-                responseCode = 500;
-            } else {
-                console.info("data:", data.MessageId);
-                responseBody.message += "Sent to hb_message_processing_queue";
-                responseBody.messageId = data.MessageId;
-            }
-        });
-    }
-
-    else if(nlb==true){
-        const params = {
-            MessageBody: event.body,
-            QueueUrl: queueUrl2,
-        };
-
-        sqs.sendMessage(params, (error, data) => {
-            if (error) {
-                console.info("error:", `failed to send message${error}`);
-                responseCode = 500;
-            } else {
-                console.info("data:", data.MessageId);
-                responseBody.message += `Sent to nlb_message_processing_queue`;
-                responseBody.messageId = data.MessageId;
-            }
-        });
-    }
-
-    const response = {
+    var responseCode = 200;
+    var responseBody= "";
+    var response = {
         statusCode: responseCode,
-        headers: {
-            "Content-Type": "application/json",
-        },
-        body: JSON.stringify(responseBody),
+        body: responseBody,
     };
-    callback(null, response);
-
-};
+    
+    var data = JSON.parse(event.body);
+    var hipotekarna = data.message.includes("Hipotekarna");
+    var nlb = data.message.includes("NLB");
+    
+    if(hipotekarna==true){ 
+        
+        var params = {
+            MessageBody: data.message,
+            QueueUrl: "https://sqs." + region + ".amazonaws.com/" + accountId + "/hb_message_processing_queue"
+        }
+        
+        sqs.sendMessage(params, function(err, data) {
+            if (err) console.log(err, err.stack); // an error occurred
+            else     console.log(data);           // successful response
+        });
+        
+        responseBody = "Message sent to hb_message_processing_queue";
+    };
+    
+    if(nlb==true){ 
+        
+        var params = {
+            MessageBody: data.message,
+            QueueUrl: "https://sqs." + region + ".amazonaws.com/" + accountId + "/nlb_message_processing_queue"
+        }
+        
+        sqs.sendMessage(params, function(err, data) {
+            if (err) console.log(err, err.stack); // an error occurred
+            else     console.log(data);           // successful response
+        });
+        
+        responseBody = "Message sent to nlb_message_processing_queue";
+    };
+    
+     callback(null, response);
+}
