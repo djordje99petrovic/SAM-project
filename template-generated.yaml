@@ -8,7 +8,7 @@ Resources:
       FunctionName: retriever
       Handler: retriever.handler
       Runtime: nodejs12.x
-      CodeUri: s3://djordje-test-sam/fabfd3407312823e95ada356ac2eeb6e
+      CodeUri: s3://djordje-test-sam/5a4ef2f4313b6dde0f9271395c5f4ddb
       Description: Scans the DynamoDB table and returns results in response to API
         GET request.
       Policies:
@@ -21,7 +21,7 @@ Resources:
           Resource:
           - Fn::Join:
             - ':'
-            - - arn:aws:sqs
+            - - arn:aws:dynamodb
               - Ref: AWS::Region
               - Ref: AWS::AccountId
               - table/transactions
@@ -38,7 +38,7 @@ Resources:
       Description: Polls the parsed_messages queue and writes data to DynamoDB table
       Handler: transaction_creator.handler
       Runtime: nodejs12.x
-      CodeUri: s3://djordje-test-sam/fabfd3407312823e95ada356ac2eeb6e
+      CodeUri: s3://djordje-test-sam/5a4ef2f4313b6dde0f9271395c5f4ddb
       Policies:
       - Version: '2012-10-17'
         Statement:
@@ -49,7 +49,7 @@ Resources:
           Resource:
           - Fn::Join:
             - ':'
-            - - arn:aws:sqs
+            - - arn:aws:dynamodb
               - Ref: AWS::Region
               - Ref: AWS::AccountId
               - table/transactions
@@ -65,11 +65,11 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: hb_processor
-      Description: Periodically polls an SQS queue and asynchronously consumes each
-        message.
+      Description: Polls the hb_message_processing_queue, processes the message and
+        sends it to parsed_messages queue.
       Handler: hb_processor.handler
       Runtime: nodejs12.x
-      CodeUri: s3://djordje-test-sam/fabfd3407312823e95ada356ac2eeb6e
+      CodeUri: s3://djordje-test-sam/5a4ef2f4313b6dde0f9271395c5f4ddb
       Policies:
       - Version: '2012-10-17'
         Statement:
@@ -96,11 +96,11 @@ Resources:
     Type: AWS::Serverless::Function
     Properties:
       FunctionName: nlb_processor
-      Description: Periodically polls an SQS queue and asynchronously consumes each
-        message.
+      Description: Polls the nlb_message_processing_queue, processes the message and
+        sends it to parsed_messages queue.
       Handler: nlb_processor.handler
       Runtime: nodejs12.x
-      CodeUri: s3://djordje-test-sam/fabfd3407312823e95ada356ac2eeb6e
+      CodeUri: s3://djordje-test-sam/5a4ef2f4313b6dde0f9271395c5f4ddb
       Policies:
       - Version: '2012-10-17'
         Statement:
@@ -131,7 +131,7 @@ Resources:
         on the content to one of the two queues.
       Handler: router.handler
       Runtime: nodejs12.x
-      CodeUri: s3://djordje-test-sam/fabfd3407312823e95ada356ac2eeb6e
+      CodeUri: s3://djordje-test-sam/5a4ef2f4313b6dde0f9271395c5f4ddb
       Policies:
       - Version: '2012-10-17'
         Statement:
