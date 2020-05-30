@@ -1,5 +1,7 @@
-const AWS = require('aws-sdk');
-const dynamo = new AWS.DynamoDB.DocumentClient();
+'use strict';
+
+const AWS = require("aws-sdk");
+const dynamodb = new AWS.DynamoDB.DocumentClient({apiVersion: '2012-08-10'});
 
 exports.handler = async (event, context) => {
 
@@ -10,13 +12,13 @@ exports.handler = async (event, context) => {
     };
 
     try {
-        switch (event.httpMethod) {
-            case 'GET':
-                body = await dynamo.scan({ TableName: "transactions" }).promise();
-                break;
-            default:
-                throw new Error(`Unsupported method "${event.httpMethod}"`);
+        
+        if(event.httpMethod == 'GET'){
+            body = await dynamodb.scan({ TableName: "transactions" }).promise();
         }
+        
+        else {throw new Error(`Unsupported method "${event.httpMethod}"`);}
+        
     } catch (err) {
         statusCode = '400';
         body = err.message;
